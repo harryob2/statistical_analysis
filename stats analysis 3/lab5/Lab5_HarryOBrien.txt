@@ -1,0 +1,126 @@
+set.seed(123)
+
+## PART 1
+# Clustering analysis is perfect for working with large, unstructured
+# datasets. If you don't really understand a dataset you can't use
+# supervised learning techniques effectively, which is where 
+# unsupervised learning techniques such as clustering come in handy.
+# Once you have identified the different clusters in a dataset, you
+# can use supervised learning methods to classify your data subsets.
+ 
+# K-means clustering is great for working with datasets such as the
+# petals dataset, as there are 3 distinct groups. However, most data
+# cannot be cleanly split into k amount of clusters as there is typically
+# overlap. In these cases, no matter what value you use for k, it
+# won't be very effective and can be misleading.
+
+# In such cases where k means clustering isn't veru useful, hierarchical
+# clustering is great because it still clusters data while identifying
+# overlap. However, if your dataset has a lot of outliers this method
+# won't accurately identify clusters and you will be left with a 
+# very confusing dendrogram. Also, this method requires a lot of
+# computational power which can make the process time-consuming if
+# you have a crappy laptop like I do, or if you're working with
+# large datasets, or both.
+
+
+##PART 2
+# reference: https://datascienceplus.com/hierarchical-clustering-in-r/
+# First, we must prepare our dataset. We do this by turning the iris
+# dataset into a distance matrix. To do this, we use the dist() function
+data <- dist(iris[, 1:4])
+# to create a hierarchical cluster, we use the hcluster() function
+hcluster <- hclust(data)
+plot(hcluster)
+# we know there are 3 species in this dataset, and we can see from
+# the plot that if we cut at a height of 4
+hclusterCut <- cutree(hcluster, 4)
+#make a table to examine the distribution
+table(hclusterCut, iris$Species)
+# we can see when we cut at this height we have isolated the 3
+# species about as well as we can expect. there is a bit of
+# overlap between versicolor & virginica which is to be
+# expected. Lets try using the average method
+clusters <- hclust(dist(iris[, 3:4]), method = 'average')
+plot(clusters)
+# we can see from the plot to best point to cut is h = 3
+clusterCut <- cutree(clusters, 3)
+table(clusterCut, iris$Species)
+# this method was much more effective, only getting 6
+# datapoints wrong, big improvement on the last time
+
+
+## PART 3
+# reference: https://cran.r-project.org/web/packages/mclust/vignettes/mclust.html
+# Creating the Model
+BIC <- mclustBIC(iris[,1:4])
+mod1 <- Mclust(iris[,1:4], x = BIC, G = 3)
+plot(mod1)
+summary(mod1)
+summary(mod1, parameters = TRUE)
+# we can see that the greatest overlap is sepal.length and
+# sepal.width, but before doing anything we will look at
+# all the plots
+
+#BIC
+plot(BIC)
+summary(BIC)
+# Classification
+class <- iris$Species
+table(class)
+table(class, mod1$classification)
+plot(mod1, what = "classification")
+# Uncertainty
+plot(mod1, what = "uncertainty")
+# Density 
+plot(mod1, what = "density")
+uncerPlot(z = mod1$z, truth = iris[,5])
+
+# so this gives us a lot of data to work with, if you view
+# classification you can see the clusters quite clearly.
+# This differs from the hierarchical clustering because
+# you can see which parameters overlap and which do not. 
+# thus, we know that the greatest difference between 
+# species is their petal length & width, and their
+# sepal length & width are more closely alligned
+
+
+## Part 4
+
+#introduce libraries
+library("purrr")
+library("cluster")
+
+normalise <- function(x){ #normalise the function for data to set between [0,1]
+  return ((x - min(x))/(max(x) - min(x)))
+}
+iris = normalise(iris[,1:4]) #normalising the data for the iris set
+head(iris,6) #check that data has been normalised
+
+#iris$Sepal.Length = normalise(iris$Sepal.Length)
+#iris$Sepal.Width = normalise(iris$Sepal.Width)
+#iris$Petal.Length = normalise(iris$Petal.Length)
+#iris$Petal.Width = normalise(iris$Petal.Width)
+
+totalDistance1 <- function( k) { # using the elbow method
+  X = pam(gow,k)
+  totalAvg = sum(X$clusinfo[,1]*X$clusinfo[,3])
+  return(totalAvg)
+}
+totalDistance2 <- function(k) { # and silhouette method
+  X = pam(gow,k)
+  totalAvg = X$silinfo$avg.width
+  return(totalAvg)
+}
+
+gow = daisy(iris, metric = "gower") #dissimilarity matrix calculation
+k1 = 1:20 #setting k values
+k2 = 2:20
+distances1 = map_dbl(k1, totalDistance1) #finding distances with k values
+distances2 = map_dbl(k2, totalDistance2)
+
+plot(k1, distances1, type="o", pch = 1, frame = FALSE, xlab="Number of clusters K", ylab="Total Distance", xlim=c(1,20))
+plot(k2, distances2, type="o", pch = 1, frame = FALSE, xlab="Number of clusters K", ylab="Total Distance", xlim=c(1,20))
+
+# as you can see, the optimal number of clusters is 3. The code cannot be modified
+# because the gower distance is incompatible with this type of code

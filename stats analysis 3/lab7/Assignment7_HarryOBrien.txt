@@ -1,0 +1,145 @@
+# import libraries
+library(ggplot2)
+library(glmnet)
+library(caret)
+library(dplyr)
+library(pROC)
+library(ROCR)
+install.packages('e1071', dependencies=TRUE)
+library(leaps)
+
+## PART 1
+breast_cancer <- read.csv("C:/Users/User/Downloads/breast_cancer.dat") #importing breast cancer dataset
+set.seed(123) #set the seed to make your partition reproducible
+
+# CLEANING DATA
+breast_cancer[breast_cancer == "?"] <- NA # change ? values to NA
+bc_new <- na.omit(breast_cancer) # remove rows with NA values, gave it a shorter name to save me the typing
+#clean up the rest of the data by defining columns
+bc_new[bc_new$class_tumor == 2,]$class_tumor <- 0
+bc_new[bc_new$class_tumor == 4,]$class_tumor <- 1
+bc_new$class_tumor <- as.integer(bc_new$class_tumor)
+cols.integers.less.class <- c("clump_thick", "unif_cell_shape", "unif_cell_size", "marg_adhesion", "epithelial_size", "bland_chromatin", "normal_nucleoli", "mitoses", "bare_nuclei")
+bc_new[cols.integers.less.class] <- lapply(bc_new[cols.integers.less.class], integer)
+bc_new$bare_nuclei <- as.integer(bc_new$bare_nuclei)
+sapply(bc_new, class) #check to see the above code worked <- source: https://stackoverflow.com/questions/33180058/coerce-multiple-columns-to-factors-at-once/53710748
+#change outcome variable from binary to valid names
+bc_new[bc_new$class_tumor == 0,]$class_tumor <- 'Benign'
+bc_new[bc_new$class_tumor == 1,]$class_tumor <- 'Malignant'
+bc_new$class_tumor <- as.factor(bc_new$class_tumor)
+
+
+#subset data to create training, validation, and test data  Source: Sample code
+library(dplyr)
+train.dat <- bc_new %>% sample_frac(.6)
+rem.dat <- dplyr::anti_join(bc_new, train.dat, by = 'id_number')
+test.dat <- rem.dat %>% sample_frac(.5)
+val.dat <- dplyr::anti_join(rem.dat, test.dat, by = 'id_number')
+
+# CREATE PREDICTOR MATRIX & OUTCOME VECTOR  Source: Sample code
+train.X <- as.matrix(within(train.dat, rm(class_tumor, id_number)))
+val.X <- as.matrix(within(val.dat, rm(class_tumor, id_number)))
+test.X <- as.matrix(within(test.dat, rm(class_tumor, id_number)))
+train.y <- train.dat$class_tumor
+val.y <- val.dat$class_tumor
+test.y <- test.dat$class_tumor
+
+#cross-validate to tune lambda for ridge and lasso
+cvridge <- cv.glmnet(train.X, train.y, family="binomial", alpha=0, nlambda=20, type.measure="auc")
+cvlasso <- cv.glmnet(train.X, train.y, family="binomial", alpha=1, nlambda=20, type.measure="auc")
+
+#fit models with final lambda
+ridgemod <- glmnet(train.X, train.y, family="binomial", alpha = 0, lambda = cvridge$lambda.1se)
+lassomod <- glmnet(train.X, train.y, family="binomial", alpha = 1, lambda = cvlasso$lambda.1se)
+
+
+train.stdX <-scale(train.X)
+
+# Set training control
+train_control <- trainControl(method = "repeatedcv",
+                              number = 10,
+                              repeats = 10,
+                              search = "random",
+                              classProbs = TRUE,
+                              summaryFunction = twoClassSummary,
+                              verboseIter = TRUE)
+
+# Train the model
+elastic_grid <- train(train.stdX, train.y,
+                      method = "glmnet",
+                      tuneLength = 25,
+                      trControl = train_control,
+                      metric= "ROC",
+                      family = "binomial",
+                      standardize = FALSE)
+
+#fit the model with best lambda and alpha
+elasticmod <- glmnet(train.X, train.y, family="binomial", alpha = elastic_grid$bestTune$alpha, lambda = elastic_grid$bestTune$lambda)
+
+
+## PART 2
+#Looking at Coefs for final models
+Intercepts <- cbind(ridgemod$a0,lassomod$a0,elasticmod$a0)
+Coefs <- cbind(ridgemod$beta,lassomod$beta, elasticmod$beta)
+Betas <-rbind(Intercepts, Coefs)
+rownames(Betas)[1] = "(Intercept)"
+colnames(Betas) = c("Ridge", "Lasso", "Elastic Net")
+Betas
+
+fit.ridge <- predict(ridgemod, val.X, type="response")
+
+#Method for comparing performance metrics of various final models in test data 
+#(here using pROC "youden" to choose threshold)
+
+#fit lasso and elastic models
+fit.lasso <- predict(lassomod, val.X, type="response")
+fit.elastic <- predict(elasticmod, val.X, type="response")
+
+#get thresholds
+thresh.r <- coords(roc(val.y, as.vector(fit.ridge)), "best", best.method="youden", transpose=TRUE, ret="threshold")
+thresh.l <- coords(roc(val.y, as.vector(fit.lasso)), "best", best.method="youden", transpose=TRUE, ret="threshold")
+thresh.e <- coords(roc(val.y, as.vector(fit.elastic)), "best", best.method="youden", transpose=TRUE, ret="threshold")
+
+#predict classifications in test data
+final.r <- predict(ridgemod, test.X, type="response")
+final.l <- predict(lassomod, test.X, type="response")
+final.e <- predict(elasticmod, test.X, type="response")
+
+#use caret to see various measures of performance
+class.ridge <- as.factor(ifelse(final.r <= thresh.r, "Benign", "Malignant"))
+confusionMatrix(class.ridge, test.y, positive = "Malignant")
+
+class.lasso <- as.factor(ifelse(final.l <= thresh.l, "Benign", "Malignant"))
+confusionMatrix(class.lasso, test.y, positive = "Malignant")
+
+class.elastic <- as.factor(ifelse(final.e <= thresh.e, "Benign", "Malignant"))
+confusionMatrix(class.elastic, test.y, positive = "Malignant")
+
+#ROC and pROC
+#Method using visualisation of ROC curves
+#Ridge
+fit.ridge <- predict(ridgemod, val.X, type="response")
+
+ROCRfit.ridge = prediction(fit.ridge, val.y)
+ROCRperf.tr.ridge = performance(ROCRfit.ridge, "tpr", "fpr")
+
+plot(ROCRperf.tr.ridge, colorize=TRUE, main="Ridge", xlim = c(0, 0.25))
+
+#LASSO
+fit.lasso <- predict(lassomod, val.X, type="response")
+
+ROCRfit.lasso = prediction(fit.lasso, val.y)
+ROCRperf.tr.lasso = performance(ROCRfit.lasso, "tpr", "fpr")
+
+plot(ROCRperf.tr.lasso, colorize=TRUE, main="LASSO", xlim = c(0, 0.25))
+
+#Elastic Net
+fit.elastic <- predict(elasticmod, val.X, type="response")
+
+ROCRfit.elastic = prediction(fit.elastic, val.y)
+ROCRperf.tr.elastic = performance(ROCRfit.elastic, "tpr", "fpr")
+
+plot(ROCRperf.tr.elastic, colorize=TRUE, main="Elastic Net", xlim = c(0, 0.25))
+
+## Now calculate BIC for identifying influencing variables
+plot(regsubsets(class_tumor ~., data = bc_new, method = "exhaustive", nbest = 1))

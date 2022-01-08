@@ -1,0 +1,11 @@
+9.5/16
+
+---------
+
+Feedback to Learner
+11/04/21 20:15
+1) Note that values were mapped from 1-10, not categorical rankings.
+
+2) Justification of cutoff choice not described in comments, and should be based on some assessment of trade-off. Note that you should not choose your threshold based on the test dataset - the test dataset is to *evaluate*, should make no choices here. 
+
+3) A plain statement of the purpose of the model "to classify samples as benign or malignant based on this data" would be valuable. A note on the number of observations excluded and the final size of the dataset could be valuable. Appreciate discussion of coefficients/p-values. Lacking in detail on threshold chosen - not sure what "4" refers to. How well the model performs in the test data not presented. 

@@ -1,0 +1,67 @@
+##PART 1
+#import currency.txt
+Currency_df <- read.delim("C:/Users/harry/OneDrive/Desktop/college/stats analysis 3/Currency.txt", header=FALSE)
+#create function to create subset between 2 dates
+colnames(Currency_df) = c("Date", "mean FOREX")
+#change date format so I can work with it
+Currency_df$Date = as.Date(Currency_df$Date, format("%d %b %Y"))
+#create subset between dates 1 week before and 2 weeks after brexit
+Currency_df_sub = subset(Currency_df, Date>=as.Date("2016-06-26")-7 & Date<=as.Date("2016-06-26")+13)
+#create pdf which will contain new plot
+pdf("BrexitExchange.pdf")
+#plot FOREX the same as the example provided on blackboard
+plot(Currency_df_sub, ylab="daily avg", main="Brexit Avg Daily Exchange Rate \nGBP:USD", type="l", col="green", lty=2)+
+  abline(h=mean(Currency_df_sub$`mean FOREX`), col="blue", lty=2)
+#save and close PDF
+dev.off()
+
+##PART 2
+#source: http://www.sthda.com/english/wiki/ggplot2-box-plot-quick-start-guide-r-software-and-data-visualization
+#source for save as pdf: https://www.datanovia.com/en/blog/how-to-save-a-ggplot/#print-into-a-png-file
+#import library ggplot2
+library(ggplot2)
+#create dataset
+my_iris <- iris
+#create pdf
+pdf("irisnew.pdf")
+#create boxplot, not sure if you wanted this
+my_plot <- ggplot(my_iris, aes(Sepal.Length, Sepal.Width, group=Species, colour = Species)) + 
+  geom_boxplot(notch=TRUE, outlier.colour="red", outlier.shape=8,
+               outlier.size=4)
+#create scatter splot
+my_plot <- ggplot(my_iris, aes(Sepal.Length, Sepal.Width, group=Species, colour = Species, shape = Species)) + #i added seperate
+  #colours and shapes for each species
+  geom_point() + geom_smooth(se=FALSE, fullrange=TRUE) +
+  scale_shape_manual(values=c(3, 16, 17))+ 
+  scale_color_manual(values=c('#999999','#E69F00', '#56B4E9'))+ #i added custom colours and shapes, and a regression line
+  theme(legend.position="top") #put the legend at the top to make the graph wider so it looks better
+#save and close pdf
+ggsave("irisnew.pdf", plot = my_plot)
+dev.off()
+
+##PART 3
+#source: https://rpubs.com/Zeina123/632765
+#import library
+library(ggplot2)
+#create dataset
+my_diamonds <- diamonds
+#create pdf
+
+#create boxplot
+my_diamonds <- ggplot(diamonds, aes(x=cut, y=price, fill=cut)) + #this sets the x an y axis based on quality, and has increasingly bright colours
+  #based on quality
+  geom_boxplot() + 
+  ggtitle("Diamond Price according to the Cut Type") + #title of boxplot
+  xlab("Type of Cut") + 
+  ylab("Diamond Price") + 
+  coord_cartesian(ylim=c(0,7500)) #adds limit to size of plot, so it isn't ridiculously big
+#save plot
+ggsave("diamondsnew.pdf", plot = my_diamonds)
+
+##PART 4
+#source: https://rpubs.com/Zeina123/632765
+#create histogram
+diamond_hist <- ggplot(diamonds, aes(x=price, fill=cut)) + 
+  geom_histogram(binwidth=4000)
+#I used a histogram so you could see that as price increases, scarcity does too. users can also
+#see that higher quality cuts make up a larger % of high price cuts

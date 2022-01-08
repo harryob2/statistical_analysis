@@ -1,0 +1,42 @@
+## PART 1
+#libraries
+library(ROCR)
+#import dataset
+breast_cancer <- read.csv("C:/Users/User/Downloads/breast_cancer.dat")
+# CLEANING DATA
+breast_cancer[breast_cancer == "?"] <- NA # change ? values to NA
+bc_new <- na.omit(breast_cancer) # remove rows with NA values, gave it a shorter name to save me the typing
+#clean up the rest of the data by defining which columns are factors
+bc_new[bc_new$class_tumor == 2,]$class_tumor <- 0
+bc_new[bc_new$class_tumor == 4,]$class_tumor <- 1
+bc_new$class_tumor <- as.integer(bc_new$class_tumor)
+
+
+cols.factors <- c("clump_thick", "unif_cell_shape", "unif_cell_size", "marg_adhesion", "epithelial_size", "bland_chromatin", "normal_nucleoli", "mitoses", "class_tumor", "bare_nuclei")
+cols.factors.less.class <- c("clump_thick", "unif_cell_shape", "unif_cell_size", "marg_adhesion", "epithelial_size", "bland_chromatin", "normal_nucleoli", "mitoses", "bare_nuclei")
+
+bc_new[cols.factors.less.class] <- lapply(bc_new[cols.factors.less.class], integer)
+sapply(bc_new, class) #check to see the above code worked <- source: https://stackoverflow.com/questions/33180058/coerce-multiple-columns-to-factors-at-once/53710748
+
+# MAKING TRAINING & TEST SUBSETS source: https://www.listendata.com/2015/02/splitting-data-into-training-and-test.html
+set.seed(123) #set the seed to 123 so my results are reproducible
+bc <- subset(bc_new, select = c(cols.factors) ) #make new dataset without id column
+dt = sort(sample(nrow(bc), nrow(bc)*.8)) #function to sample 80% of data from bc_new dataset randomly
+train<-bc[dt,]
+test<-bc[-dt,] #make training and test datasets, which are mutually exclusive
+
+# MAKING LOGISTIC REGRESSION MODEL
+model <- glm(class_tumor ~., data = train, family = "binomial") # made the model
+summary(model) #summary of model
+mypredict = predict(model, train, type="response") #results
+summary(mypredict)
+
+
+## PART 2
+ROCRpred <- prediction(mypredict, test$class_tumor)
+ROCRperf = performance(ROCRpred, "tpr", "fpr")
+# Plot ROC curve
+plot(ROCRperf, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=c(-0.2,1.7), xlim = c(0,0.04)) #added an x limit for clarity - source: your slides
+# Finding AUC to decide threshold
+auc_ROCR <- performance(ROCRpred, measure = "auc")
+auc_ROCR <- auc_ROCR@y.values[[1]]

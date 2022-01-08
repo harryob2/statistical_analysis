@@ -1,0 +1,44 @@
+9.5/16
+
+Comments
+HARRY O BRIEN
+05/03/21 18:45
+I accidentally submitted the last time, which was on time, without first saving the file. I had updated the code but when I submitted that to blackboard those updates weren't included because I didn't save. This new submission is my final one. :)
+
+Feedback to Learner
+20/03/21 19:28
+Part 1
+
+2.5
+
+"Lacking in detail
+
+Appreciate discussion of computational issues
+
+Outliers discussed
+
+Choice of distance ; linkage, standardisation, not discussed
+
+K-medoids vs k-means etc not discussed
+
+Model based clustering not discussed"
+
+Part 2
+
+2
+
+"Needs justification of distance/linkage choices
+
+could do more with post-cluster analysis - eg what do the clusters have in common? "
+
+Part 3
+
+2.5
+
+Reasonable effort. Could have gone into a little more detail on where the differences between methods occurred i.e which observations changed groups. Could have given more discussion of results of post-cluster analysis
+
+Part 4
+
+2.5
+
+Complete. Re: Gap statistic, you're on the right track, see general feedback (harry: i have no idea what shes on about here with general feedback, went looking but think she forgot)

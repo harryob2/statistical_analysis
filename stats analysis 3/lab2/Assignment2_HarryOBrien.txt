@@ -1,0 +1,40 @@
+#importing data
+Lab.2...EU_20190102 <- read.csv("D:/trinity/college work/stats analysis/lab 2/data/Lab 2 - EU_20190102.txt")
+Lab.2...US_2019_02_01 <- read.csv("D:/trinity/college work/stats analysis/lab 2/data/Lab 2 - US_2019_02_01.txt", sep=";")
+
+##part 1
+eu3050 = subset(Lab.2...EU_20190102, 50 > age & age > 30) #made dataset
+write.csv(eu3050, file = "EU_cust_30_50") #exported dataset
+
+eucusterse = subset(Lab.2...EU_20190102, education = "tertiary" & job == "entrepreneur" | "self-employed") #made 2nd dataset
+write.csv(eucusterse, file = "EU_cust_ter_se_enter") #exported 2nd dataset
+
+
+
+##part 2
+alljobs = levels(Lab.2...EU_20190102$job) #made vector from jobs
+jobsubset = subset(Lab.2...EU_20190102, select = job) #made subset with only jobs
+dfs <- split(Lab.2...EU_20190102, list(Lab.2...EU_20190102$job), drop = TRUE) #split data into 12 subsets based on jobs
+sapply(names(dfs), function (x) write.table(dfs[[x]], file=paste("EU_cust_occupation_", x, ".csv", sep=""))) #export each subset as a .csv
+#when these subsets get exported, they only use one column for all the data. I know this is wrong, and theres
+#an issue with how I made the dataset, but I don't know what
+
+#Dont think we need to do anything with regards to the teleph, landline, and mobile
+#They should will each be options in our merged dataset
+
+#Change US balance into Euros by multiplying by 0.87
+us_data[,6] <- us_data[,6]*0.87
+
+#Create additional variables in us_data and set them to NA
+us_data[,"poutcome"] <- NA
+
+#'Slightly different settings for making data dumps are used in EU and US offices'
+#Dont know what this means, so I've ignored this
+
+#Specify where the customer originates
+us_data[,"origin"] <- 'US'
+eu_data[,"origin"] <- 'EU'
+
+#Merge datasets and write out csv file
+EU_US_Merge <- rbind(us_data, eu_data)
+write.csv(EU_US_Merge, 'EU_US_Merge.csv')

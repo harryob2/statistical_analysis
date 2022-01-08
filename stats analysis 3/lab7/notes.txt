@@ -1,0 +1,17 @@
+Feedback to Learner
+01/05/21 18:45
+All three models presented, with measures of performance shown. 
+
+Overall conclusion is supported by the analysis (though on what basis are you deciding they are not as good as a doctor - we do not know how classification was ultimately performed, could be historic data)
+
+Regsubsets included
+
+Appreciate critical thinking in terms of performance metrics with consideration of dataset.
+
+
+
+Report lacks introduction to dataset and purpose of modelling. Include figures for dataset size, % allocated to training/validation/test, thresholds.
+
+Appreciate inclusion of coefficients, could elevate by further discussion same - which are most important?
+
+Brief discussion of the various methods would elevate.

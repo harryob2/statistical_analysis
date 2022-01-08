@@ -1,0 +1,50 @@
+##PART 1
+#made the matrix
+bigMatrix = matrix(runif(100000),nrow = 1000)
+#part a
+matrixRowMeans = apply(bigMatrix, 1, mean)
+#part b
+matrixColumnMeans = apply(bigMatrix, 2, mean)
+#part c
+matrixSumOfSquaredRows = apply(bigMatrix, 1, FUN = function(x) sum(x^2))
+#part d
+matrixSumOfExpRows = apply(bigMatrix, 1, FUN = function(x) exp(x+1))
+
+
+##PART 2
+part2function <- function(data, row = TRUE) { 
+  
+  dataRowMeans      <- apply(data, 1, mean)
+  dataColumnMeans   <- apply(data, 2, mean)
+  dataRowStdDev     <- apply(data, 1, sd)
+  dataColumnStdDev  <- apply(data, 2, sd)
+  #created variables with all possible outputs
+  
+  rowList           <- list(means = dataRowMeans, sds = dataRowStdDev)
+  columnList        <- list(means = dataColumnMeans, sds = dataColumnStdDev)
+  #created 2 distinct, named nests of outputs
+  
+  {if (row == TRUE) {
+  return(rowList)
+  }
+    else {
+      return(columnList)
+    }
+    #set default output to be rows
+    #dont know how to name each entry in the vectors
+  }
+}
+
+
+##PART 3
+#made first histogram
+firstHist <- hist(matrixRowMeans, breaks = 30, xlim = c(0.43, 0.58))
+#part 3 matrix
+part3matrix = matrix(runif(1000000, min = -1, max = 1), nrow = 1000)
+part3means = apply(part3matrix, 1, mean)
+#2nd histogram
+secondHist <- hist(part3means, breaks = 30, xlim = c(-0.05, 0.05))
+#I don't know how to combine histograms to compare directly
+#The difference between the 2 is that the larger matrix (part3matrix)
+#is more evenly distributed. It also has a median of 0, instead of 0.5
+#which is normal.

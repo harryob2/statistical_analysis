@@ -1,0 +1,11 @@
+Feedback to Learner
+02/05/21 19:48
+Overall this report answers the research question to a degree, however a large amount of effort/space expended on descriptive statistics that could possibly have been better focused on modeling. Overall the report structure could be improved (see below). Report lacks reference to relevant literature/academic references on methods but shows good research into literature on data context.
+
+
+
+Introduction: Appreciate description of the dataset and its purpose, as well as the aim of the report. Make sure to include a general sense of the data type of the various variables - are they continuous, binary, ordinal etc. Highly appreciate research into data subject inclusion. Methods: No methods section. In introduction, a number of methods are mentioned, but do not seem to be applied. Overall it seems you are focusing on exploratory analysis but this is not mentioned/motivated here.
+
+Results: Graphs in results section showing exploratory analysis should probably be included in the introduction. Appreciate commentary on graphs.
+
+Discussion/Conclusion: Appreciate time limitations, but unclear why a Poisson model was not attempted. Be careful not to conclude beyond the scope of your data/analysis - causal relationships have not been established.
